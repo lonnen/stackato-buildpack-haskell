@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+BIN_DIR=$(cd $(dirname $0); pwd) # absolute path
+ROOT_DIR=$(dirname $BIN_DIR)
+BUILD_DIR=$1
+CACHE_DIR=$2
+
+CACHED_DIRS="ghc .ghc .cabal"
+
+mkdir -p $CACHE_DIR
+
+indent() {
+  RE="s/^/ /"
+  [ $(uname) == "Darwin" ] && sed -l "$RE" || sed -u "$RE"
+}
+
+function puts-step (){
+  echo "-----> $@"
+}
+
+function update_cabal {
+  puts-step "Updating Cabal"
+  cabal update
+}
+
+function install_app {
+  puts-step "Installing application"
+  cd $BUILD_DIR
+  echo $(ghc --version)
+  cabal install --disable-library-profiling --disable-executable-profiling --disable-shared
+}
+
+for dir in $CACHED_DIRS; do
+  cp -R $CACHE_DIR/$dir . &> /dev/null || true
+done
+
+
+update_cabal
+install_app
+
+# store artifacts in cache
+for dir in $CACHED_DIRS; do
+  puts-step "Caching build artifacts"
+  rm -rf $CACHE_DIR/$dir
+  if [ -d $dir ]; then
+    cp -R $dir $CACHE_DIR/
+  fi
+  echo $dir
+done
+
+echo "Cache dir size:"
+du -ms $CACHE_DIR
+echo "Build dir size:"
+du -ms $BUILD_DIR
