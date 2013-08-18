@@ -9,7 +9,7 @@ Doesn't work too well with Heroku since it relies on stackato's ability to insta
 
 ```
 env:
-    BUILDPACK_URL: https://github.com/lonnen/heroku-buildpack-haskell
+    BUILDPACK_URL: https://github.com/lonnen/stackato-buildpack-haskell
 requirements:
     ubuntu:
         - libgmp3c2
